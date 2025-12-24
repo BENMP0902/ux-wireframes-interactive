@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wireframes: Análisis de Flujos de Usuario</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .wireframe-container { aspect-ratio: 16/10; background: #fff; border: 2px solid #374151; border-radius: 8px; position: relative; overflow: hidden; }
+        .browser-header { height: 32px; background: #374151; display: flex; align-items: center; padding: 0 12px; gap: 6px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .step-content { padding: 20px; height: calc(100% - 32px); overflow-y: auto; }
+        .error-message { border-left: 4px solid #ef4444; background: #fef2f2; padding: 8px; color: #b91c1c; font-size: 0.8rem; margin-top: 8px; }
+    </style>
+</head>
+<body>
+
+<div id="app" class="max-w-6xl mx-auto p-6">
+    <header class="mb-8 flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Visualizador de Wireframes</h1>
+            <p class="text-gray-600">Prototipos de baja fidelidad para flujos de usuario</p>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="changeCase('A')" id="btn-A" class="case-btn px-4 py-2 rounded-lg font-medium transition bg-blue-600 text-white">Opción A: Citas</button>
+            <button onclick="changeCase('B')" id="btn-B" class="case-btn px-4 py-2 rounded-lg font-medium transition bg-gray-200 text-gray-700 hover:bg-gray-300">Opción B: Dirección</button>
+            <button onclick="changeCase('C')" id="btn-C" class="case-btn px-4 py-2 rounded-lg font-medium transition bg-gray-200 text-gray-700 hover:bg-gray-300">Opción C: Factura</button>
+        </div>
+    </header>
+
+    <main class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <!-- Sidebar: Pasos -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
+                <h3 class="font-bold text-gray-700 mb-4 px-2">Pasos del Flujo</h3>
+                <nav id="step-nav" class="space-y-1">
+                    <!-- Dinámico -->
+                </nav>
+            </div>
+            
+            <div class="mt-6 bg-blue-50 p-4 rounded-xl border border-blue-100">
+                <h4 class="text-sm font-bold text-blue-800 mb-2 uppercase tracking-wider">Detalle del Paso</h4>
+                <p id="step-description" class="text-xs text-blue-700 leading-relaxed">
+                    Selecciona un paso para ver la descripción técnica.
+                </p>
+            </div>
+        </div>
+
+        <!-- Escenario de Prototipo -->
+        <div class="lg:col-span-3">
+            <div class="wireframe-container shadow-2xl">
+                <div class="browser-header">
+                    <div class="dot bg-red-400"></div>
+                    <div class="dot bg-yellow-400"></div>
+                    <div class="dot bg-green-400"></div>
+                    <div class="ml-4 bg-gray-600 h-4 w-64 rounded-full"></div>
+                </div>
+                <div id="wireframe-render" class="step-content">
+                    <!-- El wireframe se renderiza aquí -->
+                </div>
+            </div>
+            
+            <!-- Controles Inferiores -->
+            <div class="mt-4 flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                <button onclick="prevStep()" class="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    Anterior
+                </button>
+                <div id="progress-indicator" class="text-sm text-gray-400 font-mono">Paso 1 / 6</div>
+                <button onclick="nextStep()" id="next-btn" class="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 font-medium transition">
+                    Siguiente
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    let currentCase = 'A';
+    let currentStep = 1;
+
+    const data = {
+        'A': {
+            title: "Solicitud de Cita Médica",
+            steps: [
+                {
+                    title: "Autenticación",
+                    desc: "El usuario ingresa sus credenciales. Validación de formato y manejo de errores de seguridad.",
+                    render: `
+                        <div class="max-w-xs mx-auto mt-10">
+                            <div class="h-12 w-12 bg-gray-200 rounded-full mx-auto mb-6"></div>
+                            <h2 class="text-xl font-bold text-center mb-8 italic text-gray-400">[Logo Médico]</h2>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="text-xs font-bold text-gray-500 uppercase">Email</label>
+                                    <div class="w-full h-10 border-2 border-gray-300 rounded mt-1 bg-gray-50 p-2 text-gray-400">usuario@ejemplo.com</div>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-gray-500 uppercase">Contraseña</label>
+                                    <div class="w-full h-10 border-2 border-red-300 rounded mt-1 bg-gray-50 p-2 flex items-center">••••••••</div>
+                                    <div class="error-message">Contraseña incorrecta. Te quedan 2 intentos.</div>
+                                </div>
+                                <button class="w-full h-10 bg-gray-800 text-white font-bold rounded mt-4">INICIAR SESIÓN</button>
+                                <p class="text-xs text-center text-blue-600 underline">¿Olvidaste tu contraseña?</p>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Especialidad",
+                    desc: "Catálogo organizado con buscador y filtros de disponibilidad inmediata.",
+                    render: `
+                        <div class="max-w-md mx-auto">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div class="w-full h-10 border-2 border-gray-300 rounded p-2 text-gray-400 italic">🔍 Buscar especialidad...</div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="border-2 border-blue-500 bg-blue-50 p-4 rounded text-center">
+                                    <div class="h-8 w-8 bg-blue-200 mx-auto mb-2 rounded"></div>
+                                    <p class="font-bold text-sm">Cardiología</p>
+                                    <p class="text-[10px] text-gray-500">Corazón y vasos...</p>
+                                </div>
+                                <div class="border-2 border-gray-200 p-4 rounded text-center opacity-50">
+                                    <div class="h-8 w-8 bg-gray-200 mx-auto mb-2 rounded"></div>
+                                    <p class="font-bold text-sm">Dermatología</p>
+                                    <p class="text-[10px] text-red-500 font-bold">Sin citas x 30 días</p>
+                                </div>
+                                <div class="border-2 border-gray-200 p-4 rounded text-center">
+                                    <div class="h-8 w-8 bg-gray-200 mx-auto mb-2 rounded"></div>
+                                    <p class="font-bold text-sm">Ginecología</p>
+                                </div>
+                                <div class="border-2 border-gray-200 p-4 rounded text-center">
+                                    <div class="h-8 w-8 bg-gray-200 mx-auto mb-2 rounded"></div>
+                                    <p class="font-bold text-sm">Pediatría</p>
+                                </div>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Médico y Fecha",
+                    desc: "Selección de profesional y calendario con código de colores según disponibilidad.",
+                    render: `
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="space-y-3">
+                                <h3 class="text-sm font-bold">Médicos Disponibles</h3>
+                                <div class="border-2 border-blue-500 p-2 rounded flex gap-3 bg-blue-50">
+                                    <div class="w-10 h-10 bg-gray-300 rounded"></div>
+                                    <div>
+                                        <p class="text-xs font-bold">Dr. Juan García</p>
+                                        <p class="text-[10px] text-yellow-600">★★★★☆ (45)</p>
+                                    </div>
+                                </div>
+                                <div class="border-2 border-gray-200 p-2 rounded flex gap-3 opacity-60">
+                                    <div class="w-10 h-10 bg-gray-300 rounded"></div>
+                                    <div>
+                                        <p class="text-xs font-bold">Dra. Ana López</p>
+                                        <p class="text-[10px] text-yellow-600">★★★★★ (120)</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border-2 border-gray-200 rounded p-3">
+                                <h3 class="text-xs font-bold mb-2">Diciembre 2025</h3>
+                                <div class="grid grid-cols-7 gap-1 text-[10px] text-center">
+                                    <div class="font-bold">L</div><div class="font-bold">M</div><div class="font-bold">M</div><div class="font-bold">J</div><div class="font-bold">V</div><div class="font-bold">S</div><div class="font-bold">D</div>
+                                    <div class="h-6 flex items-center justify-center text-gray-300">1</div><div class="h-6 flex items-center justify-center text-gray-300">2</div>
+                                    <div class="h-6 flex items-center justify-center bg-green-100 border border-green-300 rounded">3</div>
+                                    <div class="h-6 flex items-center justify-center bg-yellow-100 border border-yellow-300 rounded">4</div>
+                                    <div class="h-6 flex items-center justify-center bg-blue-600 text-white font-bold rounded">5</div>
+                                </div>
+                                <p class="text-[10px] mt-4 text-blue-600 font-bold">• 5 de Dic Seleccionado</p>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Horario",
+                    desc: "Bloques de tiempo agrupados. Validación de ocupación en tiempo real.",
+                    render: `
+                        <div class="max-w-md mx-auto">
+                            <h3 class="text-sm font-bold mb-4">Selecciona una hora para el 5 de Dic</h3>
+                            <div class="space-y-6">
+                                <div>
+                                    <p class="text-[10px] font-bold text-gray-400 mb-2">MAÑANA</p>
+                                    <div class="grid grid-cols-4 gap-2">
+                                        <div class="border-2 border-gray-200 p-2 text-center text-xs rounded">08:00</div>
+                                        <div class="border-2 border-gray-200 p-2 text-center text-xs rounded opacity-30 line-through">08:30</div>
+                                        <div class="border-2 border-blue-600 bg-blue-600 text-white p-2 text-center text-xs rounded font-bold">09:00</div>
+                                        <div class="border-2 border-gray-200 p-2 text-center text-xs rounded">09:30</div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-gray-400 mb-2">TARDE</p>
+                                    <div class="grid grid-cols-4 gap-2">
+                                        <div class="border-2 border-gray-200 p-2 text-center text-xs rounded">14:00</div>
+                                        <div class="border-2 border-gray-200 p-2 text-center text-xs rounded">15:00</div>
+                                    </div>
+                                </div>
+                                <div class="bg-yellow-50 border border-yellow-200 p-2 rounded">
+                                    <p class="text-[10px] text-yellow-800">⚠️ Este horario se bloqueará por 5 min para que completes tu solicitud.</p>
+                                </div>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Motivo y Datos",
+                    desc: "Resumen no editable y captura de información clínica básica.",
+                    render: `
+                        <div class="space-y-4">
+                            <div class="bg-gray-100 p-3 rounded flex justify-between items-center">
+                                <p class="text-xs text-gray-600">Cardiología - Dr. García - 5 Dic, 09:00 AM</p>
+                                <button class="text-[10px] text-blue-600 font-bold">Modificar</button>
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-gray-700">Motivo de la consulta *</label>
+                                <textarea class="w-full h-24 border-2 border-gray-300 rounded mt-1 p-2 text-xs" placeholder="Describe tus síntomas..."></textarea>
+                                <div class="flex justify-between mt-1"><span class="text-[10px] text-gray-400">Mínimo 10 carac.</span><span class="text-[10px] text-gray-400">0 / 500</span></div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-4 h-4 border-2 border-gray-300 rounded"></div>
+                                <span class="text-xs">¿Es tu primera vez con este médico?</span>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Confirmación",
+                    desc: "Resumen final, aceptación de políticas y generación de comprobante.",
+                    render: `
+                        <div class="max-w-sm mx-auto border-2 border-dashed border-gray-300 p-6 rounded-lg text-center">
+                            <div class="h-12 w-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">✓</div>
+                            <h2 class="text-lg font-bold">¡Casi listo!</h2>
+                            <div class="my-6 text-left space-y-2 text-xs border-y border-gray-100 py-4">
+                                <p><strong>Cita:</strong> #CIT-202512-01</p>
+                                <p><strong>Especialidad:</strong> Cardiología</p>
+                                <p><strong>Fecha:</strong> 5 de Diciembre, 09:00 AM</p>
+                                <p><strong>Lugar:</strong> Consultorio 402 - Torre A</p>
+                            </div>
+                            <div class="flex items-center gap-2 mb-6">
+                                <div class="w-4 h-4 border-2 border-blue-600 bg-blue-100 rounded"></div>
+                                <span class="text-[10px] text-left">Acepto las políticas de cancelación (24h de antelación).</span>
+                            </div>
+                            <button class="w-full h-10 bg-green-600 text-white font-bold rounded">CONFIRMAR CITA</button>
+                        </div>
+                    `
+                }
+            ]
+        },
+        'B': {
+            title: "Actualización de Dirección",
+            steps: [
+                {
+                    title: "Configuración",
+                    desc: "Acceso al menú de perfil y sección de direcciones.",
+                    render: `
+                        <div class="flex h-full">
+                            <div class="w-1/3 border-r-2 border-gray-100 pr-4 space-y-2">
+                                <div class="h-4 w-full bg-gray-200 rounded"></div>
+                                <div class="h-4 w-full bg-blue-600 rounded"></div>
+                                <div class="h-4 w-full bg-gray-200 rounded"></div>
+                            </div>
+                            <div class="w-2/3 pl-6">
+                                <h2 class="text-lg font-bold mb-4">Mi Cuenta</h2>
+                                <div class="space-y-4">
+                                    <div class="p-3 border-2 border-gray-200 rounded flex items-center justify-between">
+                                        <span class="text-sm font-bold">Direcciones</span>
+                                        <span class="text-xs text-gray-400">2 guardadas</span>
+                                    </div>
+                                    <div class="p-3 border border-gray-100 rounded text-gray-300 text-sm">Métodos de pago</div>
+                                </div>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Selección",
+                    desc: "Vista de tarjetas de direcciones con opciones de edición y eliminación.",
+                    render: `
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <h2 class="text-sm font-bold">Tus Direcciones</h2>
+                                <button class="text-xs bg-gray-800 text-white px-2 py-1 rounded">+ Nueva</button>
+                            </div>
+                            <div class="border-2 border-blue-600 p-4 rounded-lg relative">
+                                <span class="absolute top-2 right-2 text-xs text-blue-600 font-bold">Predeterminada</span>
+                                <p class="font-bold text-sm">Casa</p>
+                                <p class="text-xs text-gray-500">Calle Falsa 123, Col. Centro</p>
+                                <div class="mt-4 flex gap-4 text-xs font-bold text-gray-400">
+                                    <span class="text-blue-600 cursor-pointer">EDITAR</span>
+                                    <span>ELIMINAR</span>
+                                </div>
+                            </div>
+                            <div class="border-2 border-gray-200 p-4 rounded-lg opacity-60">
+                                <p class="font-bold text-sm">Trabajo</p>
+                                <p class="text-xs text-gray-500">Av. Siempre Viva 742</p>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Edición Formulario",
+                    desc: "Campos con validación en tiempo real y autocompletado por CP.",
+                    render: `
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="col-span-2">
+                                <label class="text-[10px] font-bold text-gray-500 uppercase">Etiqueta</label>
+                                <div class="w-full h-8 border-2 border-gray-200 rounded p-1 text-xs">Casa</div>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-500 uppercase">C.P.</label>
+                                <div class="w-full h-8 border-2 border-gray-800 rounded p-1 text-xs">76000</div>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-500 uppercase">Estado</label>
+                                <div class="w-full h-8 bg-gray-100 border-2 border-gray-200 rounded p-1 text-xs text-gray-400">Querétaro</div>
+                            </div>
+                            <div class="col-span-2">
+                                <label class="text-[10px] font-bold text-gray-500 uppercase">Calle y Número</label>
+                                <div class="w-full h-8 border-2 border-red-300 rounded p-1 text-xs">A</div>
+                                <p class="text-[9px] text-red-500 mt-1">Mínimo 3 caracteres.</p>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Validación Mapa",
+                    desc: "Geolocalización visual para confirmar el punto exacto de entrega.",
+                    render: `
+                        <div class="h-full flex flex-col">
+                            <div class="flex-grow bg-gray-100 border-2 border-gray-300 rounded-lg flex items-center justify-center relative overflow-hidden">
+                                <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px;"></div>
+                                <div class="relative z-10 text-red-600 flex flex-col items-center">
+                                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>
+                                    <div class="bg-white px-2 py-1 rounded shadow-lg text-[10px] font-bold mt-1 text-black">Confirmar ubicación</div>
+                                </div>
+                            </div>
+                            <div class="mt-3 p-2 bg-blue-50 text-[10px] text-blue-700 rounded">
+                                Arrastra el marcador si la ubicación no es exacta.
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Revisión",
+                    desc: "Comparativa de cambios y verificación final antes de guardar.",
+                    render: `
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-bold">Revisa los cambios</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="p-3 bg-gray-50 border border-gray-200 rounded opacity-50">
+                                    <p class="text-[9px] font-bold text-gray-400 mb-1">ANTERIOR</p>
+                                    <p class="text-[10px]">Calle Falsa 123</p>
+                                    <p class="text-[10px]">CP 76000</p>
+                                </div>
+                                <div class="p-3 bg-blue-50 border border-blue-200 rounded">
+                                    <p class="text-[9px] font-bold text-blue-400 mb-1">NUEVA</p>
+                                    <p class="text-[10px] font-bold">Av. Industrial 456</p>
+                                    <p class="text-[10px]">CP 76120</p>
+                                </div>
+                            </div>
+                            <button class="w-full bg-blue-600 text-white py-2 rounded font-bold text-xs">GUARDAR DIRECCIÓN</button>
+                        </div>
+                    `
+                },
+                {
+                    title: "Éxito",
+                    desc: "Confirmación de actualización y sugerencia de acciones relacionadas.",
+                    render: `
+                        <div class="flex flex-col items-center justify-center h-full text-center">
+                            <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white text-3xl mb-4">✓</div>
+                            <h2 class="text-lg font-bold">¡Dirección actualizada!</h2>
+                            <p class="text-xs text-gray-500 mt-2">Tus próximos pedidos llegarán a la nueva ubicación.</p>
+                            <div class="mt-8 grid grid-cols-2 gap-3 w-full">
+                                <div class="p-3 border border-gray-200 rounded text-[10px] font-bold">SEGUIR COMPRANDO</div>
+                                <div class="p-3 border border-gray-200 rounded text-[10px] font-bold">VER PERFIL</div>
+                            </div>
+                        </div>
+                    `
+                }
+            ]
+        },
+        'C': {
+            title: "Generación de Factura",
+            steps: [
+                {
+                    title: "Selección de Compra",
+                    desc: "Historial de pedidos elegibles dentro del plazo legal.",
+                    render: `
+                        <div class="space-y-4">
+                            <h2 class="text-sm font-bold">Compras del mes</h2>
+                            <div class="border-2 border-blue-600 p-3 rounded flex justify-between items-center bg-blue-50">
+                                <div>
+                                    <p class="text-xs font-bold">Pedido #99283</p>
+                                    <p class="text-[10px] text-gray-500">20 Dic, 2025 • $2,450.00</p>
+                                </div>
+                                <div class="bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded">FACTURAR</div>
+                            </div>
+                            <div class="border border-gray-200 p-3 rounded flex justify-between items-center opacity-40">
+                                <div>
+                                    <p class="text-xs font-bold">Pedido #99100</p>
+                                    <p class="text-[10px] text-red-500 italic">Vencido para facturar</p>
+                                </div>
+                                <div class="bg-gray-200 text-gray-400 text-[10px] font-bold px-3 py-1 rounded">N/A</div>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Datos Fiscales",
+                    desc: "Ingreso de RFC y régimen fiscal con validación de estructura.",
+                    render: `
+                        <div class="space-y-4">
+                            <div class="flex gap-4">
+                                <div class="flex items-center gap-1"><div class="w-3 h-3 border-2 border-blue-600 bg-blue-600 rounded-full"></div><span class="text-[10px]">P. Física</span></div>
+                                <div class="flex items-center gap-1"><div class="w-3 h-3 border-2 border-gray-300 rounded-full"></div><span class="text-[10px]">P. Moral</span></div>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-500 uppercase">RFC *</label>
+                                <div class="w-full h-8 border-2 border-gray-800 rounded p-1 text-xs font-mono">GOMJ850212XXX</div>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-500 uppercase">Régimen Fiscal *</label>
+                                <div class="w-full h-8 border-2 border-gray-200 rounded p-1 text-xs truncate">601 - General de Ley Personas...</div>
+                            </div>
+                            <div class="bg-blue-50 p-2 rounded flex gap-2">
+                                <div class="w-4 h-4 bg-blue-200 rounded"></div>
+                                <p class="text-[9px] text-blue-700">Validado exitosamente con el SAT.</p>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Uso de CFDI",
+                    desc: "Catálogo del SAT filtrado según el tipo de persona.",
+                    render: `
+                        <div class="max-w-xs mx-auto space-y-4">
+                            <h3 class="text-sm font-bold text-center">¿Cuál es el uso de la factura?</h3>
+                            <div class="space-y-2">
+                                <div class="p-2 border-2 border-blue-600 rounded bg-blue-50 text-[10px] font-bold">G03 - Gastos en general</div>
+                                <div class="p-2 border border-gray-200 rounded text-[10px] hover:bg-gray-50">G01 - Adquisición de mercancías</div>
+                                <div class="p-2 border border-gray-200 rounded text-[10px] hover:bg-gray-50">I04 - Equipo de cómputo y accesorios</div>
+                                <div class="p-2 border border-gray-200 rounded text-[10px] hover:bg-gray-50">D01 - Honorarios médicos</div>
+                            </div>
+                            <p class="text-[9px] text-gray-400 italic">Si no estás seguro, consulta con tu contador.</p>
+                        </div>
+                    `
+                },
+                {
+                    title: "Desglose",
+                    desc: "Revisión técnica de impuestos (IVA, IEPS) y montos totales.",
+                    render: `
+                        <div class="text-[10px] border border-gray-200 rounded overflow-hidden">
+                            <div class="bg-gray-50 p-2 border-b border-gray-200 grid grid-cols-4 font-bold">
+                                <span class="col-span-2">Producto</span><span>Cant</span><span>Total</span>
+                            </div>
+                            <div class="p-2 grid grid-cols-4 border-b border-gray-100">
+                                <span class="col-span-2">Laptop Pro 14"</span><span>1</span><span>$20,000</span>
+                            </div>
+                            <div class="p-2 bg-gray-50">
+                                <div class="flex justify-between"><span>Subtotal</span><span>$20,000.00</span></div>
+                                <div class="flex justify-between font-bold text-blue-600"><span>IVA (16%)</span><span>$3,200.00</span></div>
+                                <div class="flex justify-between border-t border-gray-200 mt-2 pt-2 text-sm font-bold"><span>Total</span><span>$23,200.00</span></div>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Generación",
+                    desc: "Procesamiento y timbrado de la factura electrónica.",
+                    render: `
+                        <div class="flex flex-col items-center justify-center h-full">
+                            <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+                            <h2 class="text-sm font-bold">Generando tu factura...</h2>
+                            <p class="text-[10px] text-gray-400 mt-2 italic">Timbrando documento ante el SAT</p>
+                            <div class="w-full max-w-xs bg-gray-100 h-2 rounded-full mt-6 overflow-hidden">
+                                <div class="bg-blue-600 h-full w-3/4"></div>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Descarga",
+                    desc: "Acceso a los archivos XML y PDF, y envío por correo.",
+                    render: `
+                        <div class="max-w-sm mx-auto text-center">
+                            <div class="bg-green-50 p-4 rounded-lg mb-6">
+                                <p class="text-xs font-bold text-green-700">✓ Factura generada con éxito</p>
+                                <p class="text-[10px] text-green-600">Folio: A-10293</p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="border-2 border-gray-200 p-4 rounded hover:border-blue-600 cursor-pointer">
+                                    <div class="h-8 w-8 bg-red-100 mx-auto mb-2 flex items-center justify-center font-bold text-red-600 rounded text-[10px]">PDF</div>
+                                    <p class="text-[10px] font-bold">Descargar PDF</p>
+                                </div>
+                                <div class="border-2 border-gray-200 p-4 rounded hover:border-blue-600 cursor-pointer">
+                                    <div class="h-8 w-8 bg-blue-100 mx-auto mb-2 flex items-center justify-center font-bold text-blue-600 rounded text-[10px]">XML</div>
+                                    <p class="text-[10px] font-bold">Descargar XML</p>
+                                </div>
+                            </div>
+                            <button class="mt-6 text-xs text-blue-600 underline">Enviar por correo nuevamente</button>
+                        </div>
+                    `
+                }
+            ]
+        }
+    };
+
+    function renderStep() {
+        const scenario = data[currentCase];
+        const step = scenario.steps[currentStep - 1];
+        
+        // Render Nav
+        const nav = document.getElementById('step-nav');
+        nav.innerHTML = scenario.steps.map((s, i) => `
+            <button onclick="goToStep(${i+1})" class="w-full text-left px-3 py-2 rounded-lg text-sm transition ${i+1 === currentStep ? 'bg-blue-50 text-blue-700 font-bold border-l-4 border-blue-600' : 'text-gray-500 hover:bg-gray-50'}">
+                ${i+1}. ${s.title}
+            </button>
+        `).join('');
+
+        // Render Wireframe
+        document.getElementById('wireframe-render').innerHTML = step.render;
+        document.getElementById('step-description').innerText = step.desc;
+        document.getElementById('progress-indicator').innerText = `Paso ${currentStep} / 6`;
+        
+        // Update Case Buttons
+        document.querySelectorAll('.case-btn').forEach(btn => {
+            btn.className = 'case-btn px-4 py-2 rounded-lg font-medium transition ' + 
+                (btn.id === `btn-${currentCase}` ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300');
+        });
+
+        // Update Next button label
+        document.getElementById('next-btn').innerHTML = currentStep === 6 ? 
+            'Finalizar <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>' : 
+            'Siguiente <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
+    }
+
+    function changeCase(caseId) {
+        currentCase = caseId;
+        currentStep = 1;
+        renderStep();
+    }
+
+    function goToStep(s) {
+        currentStepl = s;
+        renderStep();
+    }
+
+    function nextStep() {
+        if (currentStep < 6) {
+            currentStep++;
+            renderStep();
+        }
+    }
+
+    function prevStep() {
+        if (currentStep > 1) {
+            currentStep--;
+            renderStep();
+        }
+    }
+
+    // Init
+    renderStep();
+</script>
+
+</body>
+</html>
